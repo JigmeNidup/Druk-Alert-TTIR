@@ -16,18 +16,48 @@ The zones are TTIR Main Gate (trespass), Mountain Above TTIR Gate (landslide), a
 
 `npm run db:reset` drops the database, reapplies the migrations, and seeds again. Hazard events, readings, and zone status are cleared. The admin user and the three zones are recreated.
 
-## Run with PM2
+## Keep it running with PM2
 
-This starts the production console and the MQTT worker together, and restarts them if either process exits. Postgres still comes from Docker.
+PM2 is a process manager you install on the machine. It is not part of this project. Use it when you want the console and the worker to keep running after you close the terminal. Postgres still comes from Docker (`docker compose up -d`).
 
-1. `npm run build`
-2. `npm run pm2:start`
+Install PM2 once:
 
-The console is `drukalert-web` on port 3000. Ingestion is `drukalert-worker`.
+```bash
+npm install -g pm2
+```
 
-- Stop both: `npm run pm2:stop`
-- Restart both: `npm run pm2:restart`
-- Follow logs: `npm run pm2:logs`
+From the `web` folder, build the console, then hand both processes to PM2:
+
+```bash
+npm run build
+pm2 start npm --name drukalert-web -- start
+pm2 start npm --name drukalert-worker -- run worker
+pm2 save
+```
+
+`drukalert-web` is `npm start` (the production console on port 3000). `drukalert-worker` is `npm run worker` (MQTT ingestion). `pm2 save` remembers that list.
+
+Useful commands, run from any directory:
+
+```bash
+pm2 status
+pm2 logs
+pm2 logs drukalert-worker
+pm2 restart drukalert-web
+pm2 restart drukalert-worker
+pm2 stop all
+pm2 delete all
+```
+
+`pm2 stop` pauses them. `pm2 delete` removes them from PM2's list. After a code change, run `npm run build` again, then `pm2 restart drukalert-web`. The worker does not need a rebuild; `pm2 restart drukalert-worker` is enough.
+
+To bring the same processes back after a Windows reboot, install the startup helper once, then save the process list:
+
+```bash
+npm install -g pm2-windows-startup
+pm2-startup install
+pm2 save
+```
 
 ## What the console does
 

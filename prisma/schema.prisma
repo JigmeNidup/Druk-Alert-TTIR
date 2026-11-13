@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  contact      String   @unique
+  passwordHash String
+  isAdmin      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model ZoneStatus {
+  zone        String   @id
+  name        String
+  status      String
+  distanceCm  Float?
+  humidityPct Float?
+  motion      Boolean?
+  alert       Boolean  @default(false)
+  sensorFault Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
+
+model HazardEvent {
+  id          String   @id @default(cuid())
+  zone        String
+  status      String
+  distanceCm  Float?
+  humidityPct Float?
+  motion      Boolean?
+  flood       Boolean
+  landslide   Boolean
+  trespass    Boolean
+  action          String
+  acknowledgedAt  DateTime?
+  acknowledgedBy  String?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ZoneReading {
+  id          String   @id @default(cuid())
+  zone        String
+  distanceCm  Float?
+  humidityPct Float?
+  motion      Boolean?
+  alert       Boolean
+  sensorFault Boolean
+  recordedAt  DateTime @default(now())
+
+  @@index([zone, recordedAt])
+}

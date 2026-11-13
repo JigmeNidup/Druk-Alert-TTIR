@@ -16,6 +16,22 @@ The zones are TTIR Main Gate (trespass), Mountain Above TTIR Gate (landslide), a
 
 `npm run db:reset` drops the database, reapplies the migrations, and seeds again. Hazard events, readings, and zone status are cleared. The admin user and the three zones are recreated.
 
+## Vercel and Prisma Postgres
+
+The Vercel project uses the Prisma Postgres database `prisma-postgres-red-umbrella`. The integration prefixes its variables with `PSQL_DATABASE_`:
+
+- `PSQL_DATABASE_DATABASE_URL_POOLED` — pooled connection, used by the console and the MQTT worker
+- `PSQL_DATABASE_POSTGRES_URL` — direct connection, used by migrations and seed
+- `PSQL_DATABASE_PRISMA_DATABASE_URL` — direct connection from the same integration
+
+Do not commit those values. Vercel injects them into the deployment. When they are absent, the app and Prisma use `DATABASE_URL`, which is how local Docker keeps working.
+
+Vercel runs `npm run vercel-build`. That generates the client, applies migrations through the direct URL, then builds Next.js.
+
+The first deploy creates empty tables. Seed the admin into that database with the direct URL available in the environment (`PSQL_DATABASE_POSTGRES_URL` or `DATABASE_URL`), then run `npm run db:seed`. A local `.env` that only points at Docker will seed Docker instead.
+
+The worker does not run on Vercel. Wherever you run `npm run worker`, that machine needs `PSQL_DATABASE_DATABASE_URL_POOLED`.
+
 ## Keep it running with PM2
 
 PM2 is a process manager you install on the machine. It is not part of this project. Use it when you want the console and the worker to keep running after you close the terminal. Postgres still comes from Docker (`docker compose up -d`).

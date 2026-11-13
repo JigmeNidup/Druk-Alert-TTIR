@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { directDatabaseUrl } from "../src/lib/database-url";
 import { ZONES } from "../src/lib/zones";
 
-const prisma = new PrismaClient();
+const url = directDatabaseUrl();
+const prisma = new PrismaClient(url ? { datasources: { db: { url } } } : undefined);
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_CONTACT = "admin@ttirangjung.bt";
